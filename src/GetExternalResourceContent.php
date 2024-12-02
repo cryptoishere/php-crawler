@@ -2,6 +2,7 @@
 
 namespace Root\AnchorElementCrawler;
 
+use Illuminate\Support\Facades\Log;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GetExternalResourceContent
@@ -26,13 +27,13 @@ class GetExternalResourceContent
             ]
         );
 
-        echo "Requesting: {$url}" . PHP_EOL;
+        Log::channel('stdout')->debug("Requesting: {$url}");
 
         $statusCode = $response->getStatusCode();
-        echo "statusCode: {$statusCode}" . PHP_EOL;
+        Log::channel('stdout')->debug("statusCode: {$statusCode}");
 
         $contentType = $response->getHeaders()['content-type'][0];
-        echo "contentType: {$contentType}" . PHP_EOL;
+        Log::channel('stdout')->debug("contentType: {$contentType}");
 
         return $response->getContent();
     }

@@ -2,8 +2,9 @@
 
 namespace Root\AnchorElementCrawler;
 
-use Symfony\Component\DomCrawler\Crawler as ExternalCrawler;
+use Illuminate\Support\Facades\Log;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\DomCrawler\Crawler as ExternalCrawler;
 
 class Crawler
 {
@@ -23,26 +24,24 @@ class Crawler
         $links = $crawler->filterXPath('descendant-or-self::body//a');
         
         foreach ($links as $anchor) {
-            echo "###Found match###" . PHP_EOL;
-        
             $anchorCrawler = new ExternalCrawler($anchor);
         
             if ($anchorCrawler->attr('rel') !== null) {
                 $relValue = $anchorCrawler->attr('rel');
-                echo "The 'rel' attribute exists and its value is: " . $relValue . "\n";
+                Log::channel('stdout')->debug("The 'rel' attribute exists and its value is: " . $relValue);
             } else {
-                echo "The 'rel' attribute does not exist on this anchor tag.\n";
+                Log::channel('stdout')->debug("The 'rel' attribute does not exist on this anchor tag.");
             }
         
             if ($anchorCrawler->attr('href') !== null) {
                 $hrefValue = $anchorCrawler->attr('href');
-                echo "The 'href' attribute exists and its value is: " . $hrefValue . "\n";
+                Log::channel('stdout')->debug("The 'href' attribute exists and its value is: " . $hrefValue);
             } else {
-                echo "The 'href' attribute does not exist on this anchor tag.\n";
+                Log::channel('stdout')->debug("The 'href' attribute does not exist on this anchor tag.");
             }
-        
-            echo "Tag: {$anchor->nodeName}" . PHP_EOL;
-            echo "Context: {$anchor->textContent}" . PHP_EOL;
+
+            Log::channel('stdout')->debug("Tag: {$anchor->nodeName}");
+            Log::channel('stdout')->debug("Context: {$anchor->textContent}");
         }
     }
 }
