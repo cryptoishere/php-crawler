@@ -2,39 +2,73 @@
 
 namespace Root\AnchorElementCrawler;
 
-use Illuminate\Support\Facades\Log;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Promise\PromiseInterface;
+use Psr\Http\Message\UriInterface;
+use GuzzleHttp\Promise;
 
 class GetExternalResourceContent
 {
+    private $promises = [];
+    private $responses = [];
+    private $options = [];
+    private $urls = [];
+
     public function __construct(
-        private HttpClientInterface $client,
+        private Client $client,
     ) {
         
     }
 
-    public function fetchExternalLink(string $url): string
+    /**
+     * Wait for all the requests to complete; throws a ConnectException if any of the requests fail
+     */
+    public function wait(): void
     {
-        $response = $this->client->request(
-            'GET',
-            $url,
-            [
-                'max_redirects' => 10,
-                'headers' => [
-                    'Content-Type' => 'text/html',
-                ],
-                'timeout' => 10,
-            ]
-        );
+        $this->wrap();
 
-        Log::channel('stdout')->debug("Requesting: {$url}");
+        if (empty($this->promises)) {
+            return;
+        }
 
-        $statusCode = $response->getStatusCode();
-        Log::channel('stdout')->debug("statusCode: {$statusCode}");
+        try {
+            CrawlerSupport::debugLog("Wait");
+            $this->responses = Promise\Utils::settle($this->promises)->wait();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 
-        $contentType = $response->getHeaders()['content-type'][0];
-        Log::channel('stdout')->debug("contentType: {$contentType}");
+    public function responses(): array
+    {
+        return $this->responses;
+    }
 
-        return $response->getContent();
+    public function setUrls(array $urls)
+    {
+        $this->urls = $urls;
+    }
+
+    public function setOptions(array $options)
+    {
+        $this->options = $options;
+    }
+
+    private function getAsync(string|UriInterface $url, array $options = []): PromiseInterface
+    {
+        return $this->client->getAsync($url, $options);
+    }
+
+    private function pushToCollection(PromiseInterface $request): void
+    {
+        $this->promises[] = $request;
+    }
+
+    private function wrap()
+    {
+        foreach ($this->urls as $url) {
+            CrawlerSupport::debugLog("Requesting: {$url}");
+            $this->pushToCollection($this->getAsync($url, $this->options));
+        }
     }
 }

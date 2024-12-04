@@ -2,10 +2,9 @@
 
 require __DIR__.'/../vendor/autoload.php';
 
+use GuzzleHttp\Client;
 use Root\AnchorElementCrawler\Command;
 use Root\AnchorElementCrawler\Crawler;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\HttpClient\CurlHttpClient;
 
 echo "\nRun crawler" . PHP_EOL;
 
@@ -43,6 +42,6 @@ if (isset($flags['url'])) {
     return;
 }
 
-$c = new Crawler(HttpClient::create());
+$c = new Crawler(new Client());
 
 $c->parse($flags['url']);
