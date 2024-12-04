@@ -3,6 +3,7 @@
 require __DIR__.'/../vendor/autoload.php';
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Collection;
 use Root\AnchorElementCrawler\Command;
 use Root\AnchorElementCrawler\Crawler;
 
@@ -42,6 +43,8 @@ if (isset($flags['url'])) {
     return;
 }
 
-$c = new Crawler(new Client());
+$c = new Crawler(new Client(), Collection::empty());
 
-$c->parse($flags['url']);
+$result = $c->parse($flags['url'], '/tikand', 'Tikkand');
+
+echo $result . PHP_EOL;

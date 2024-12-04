@@ -33,7 +33,10 @@ class GetExternalResourceContent
 
         try {
             CrawlerSupport::debugLog("Wait");
-            $this->responses = Promise\Utils::settle($this->promises)->wait();
+
+            foreach (Promise\Utils::settle($this->promises)->wait() as $url => $result) {
+                $this->responses[$url] = $result;
+            }
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -59,16 +62,17 @@ class GetExternalResourceContent
         return $this->client->getAsync($url, $options);
     }
 
-    private function pushToCollection(PromiseInterface $request): void
+    private function pushToCollection(string $url, PromiseInterface $request): void
     {
-        $this->promises[] = $request;
+        $this->promises[$url] = $request;
     }
 
     private function wrap()
     {
         foreach ($this->urls as $url) {
             CrawlerSupport::debugLog("Requesting: {$url}");
-            $this->pushToCollection($this->getAsync($url, $this->options));
+            // TODO: Encode key
+            $this->pushToCollection($url, $this->getAsync($url, $this->options));
         }
     }
 }
